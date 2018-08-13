@@ -18,7 +18,7 @@
 
 @property (nonatomic, strong) NSOperationQueue *loadOperationQueue;
 @property (nonatomic, strong) dispatch_queue_t barrierQueue;
-@property (nonatomic, strong) NSMutableDictionary <NSURL *, XBLocalImageLoaderOperation *> *urlOperations;
+@property (nonatomic, strong) NSMutableDictionary <NSString*, XBLocalImageLoaderOperation*> *pathOperations;
 
 @end
 
@@ -40,7 +40,7 @@
         _loadOperationQueue.maxConcurrentOperationCount = 6;
         _loadOperationQueue.name = @"com.xiabob.XBLocalImageLoader";
         _barrierQueue = dispatch_queue_create("com.xiabob.XBLocalImageLoader.barrier", DISPATCH_QUEUE_CONCURRENT);
-        _urlOperations = [NSMutableDictionary new];
+        _pathOperations = [NSMutableDictionary new];
         _executionOrder = XBLocalImageLoaderExecutionOrderFIFO;
     }
     
@@ -55,22 +55,22 @@
     self.loadOperationQueue.maxConcurrentOperationCount = maxConcurrentDownload;
 }
 
-- (XBLocalImageLoaderToken *)loadImageWithUrl:(NSURL *)url
+- (XBLocalImageLoaderToken *)loadImageWithPath:(NSString *)imagePath
                                       options:(XBLocalImageLoaderOptions)options
                                     completed:(XBLocalImageLoadCompletedBlock)completedBlock {
     __block XBLocalImageLoaderToken *token;
     dispatch_barrier_sync(self.barrierQueue, ^{
-        XBLocalImageLoaderOperation *operation = self.urlOperations[url];
+        XBLocalImageLoaderOperation *operation = self.pathOperations[imagePath];
         if (!operation) { //需要创建
-            operation = [[XBLocalImageLoaderOperation alloc] initWithImagePath:url];
+            operation = [[XBLocalImageLoaderOperation alloc] initWithImagePath:imagePath];
             __weak XBLocalImageLoaderOperation *wOperation = operation;
             
             //设置completionBlock，operation完成，移除urlOperations数组中对应的operation。注意，通过kvo，当finished时YES，operationQueue是自动移除对应的operation。这就是为什么自定义operation时，需要重写finished等属性。
             operation.completionBlock = ^{
                 __strong typeof(wOperation) sOperation = wOperation;
                 if (!sOperation) { return ;}
-                if (self.urlOperations[url] == sOperation) {
-                    [self.urlOperations removeObjectForKey:url];
+                if (self.pathOperations[imagePath] == sOperation) {
+                    [self.pathOperations removeObjectForKey:imagePath];
                 }
             };
             
@@ -87,12 +87,12 @@
                 [last addDependency:operation];
             }
             
-            self.urlOperations[url] = operation;
+            self.pathOperations[imagePath] = operation;
             [self.loadOperationQueue addOperation:operation];
         }
         
         token = [XBLocalImageLoaderToken new];
-        token.url = url;
+        token.path = imagePath;
         token.callback = [operation addCompletedBlock:completedBlock];
     });
     
@@ -102,9 +102,9 @@
 - (void)cancel:(XBLocalImageLoaderToken *)token {
     if (!token) {return;}
     dispatch_barrier_async(self.barrierQueue, ^{
-        XBLocalImageLoaderOperation *operation = self.urlOperations[token.url];
+        XBLocalImageLoaderOperation *operation = self.pathOperations[token.path];
         if ([operation cancel:token.callback]) {
-            [self.urlOperations removeObjectForKey:token.url];
+            [self.pathOperations removeObjectForKey:token.path];
         }
     });
 }

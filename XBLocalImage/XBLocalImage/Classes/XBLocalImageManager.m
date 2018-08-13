@@ -90,20 +90,15 @@
         return operation;
     }
     
+    if (![imagePath containsString:@"."]) {
+        //default png format
+        imagePath = [imagePath stringByAppendingString:@".png"];
+    }
+    
     if (![imagePath hasPrefix:@"//"]) {
         //default main bundle
         imagePath = [[NSBundle mainBundle] pathForResource:imagePath ofType:nil];
     }
-    
-    NSURL *imageUrl = [NSURL URLWithString:imagePath];
-    if (!imageUrl) { 
-        [self callCompletionBlockForOperation:operation
-                                   completion:completedBlock
-                                        error:[NSError errorWithDomain:NSURLErrorDomain code:0 userInfo:@{NSURLLocalizedNameKey: @"invalid image name or path"}]
-                                   nameOrPath:imageNameOrPath];
-        return operation;
-    }
-    
     
     UIImage *image = [self.imageCache memoryCacheForKey:imagePath];
     if (image) {
@@ -117,10 +112,16 @@
         
         __weak typeof(self) wself = self;
         __weak typeof (XBLocalImageContainerOperation *) woperation = operation;
-        operation.token = [self.imageLoader loadImageWithUrl:imageUrl options:0 completed:^(UIImage *image, NSError *error, BOOL finished) {
+        operation.token = [self.imageLoader loadImageWithPath:imagePath options:0 completed:^(UIImage *image, NSError *error, BOOL finished) {
             __strong typeof(woperation) soperation = woperation;
             __strong typeof(wself) sself = wself;
             if (!sself || !soperation) {return ;}
+            
+            if (!image || error) {
+                [sself callCompletionBlockForOperation:operation completion:completedBlock error:error nameOrPath:imageNameOrPath];
+                [sself safelyRemoveOperation:soperation];
+                return;
+            }
             
             if (sself.shouldDecodeImage) {
                 image = [sself.decoder decodeImage:image];

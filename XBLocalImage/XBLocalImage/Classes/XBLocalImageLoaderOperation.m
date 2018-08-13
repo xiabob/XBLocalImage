@@ -17,7 +17,7 @@ static NSString *const kCompletedCallbackKey = @"kCompletedCallbackKey";
 @property (nonatomic, assign, getter=isFinished) BOOL finished;
 @property (nonatomic, assign, getter=isExecuting) BOOL executing;
 
-@property (nonatomic, strong) NSURL *imageUrl;
+@property (nonatomic, strong) NSString *imagePath;
 
 @property (nonatomic, strong) NSMutableArray<XBCallbacksDictionary *> *callbackBlocks;
 @property (nonatomic, strong) dispatch_queue_t barrierQueue; //http://stackoverflow.com/questions/8904206/what-property-should-i-use-for-a-dispatch-queue-after-arc
@@ -29,9 +29,9 @@ static NSString *const kCompletedCallbackKey = @"kCompletedCallbackKey";
 @synthesize finished = _finished;
 @synthesize executing = _executing;
 
-- (instancetype)initWithImagePath:(NSURL *)imageUrl {
+- (instancetype)initWithImagePath:(NSString *)imagePath {
     if (self = [super init]) {
-        _imageUrl = imageUrl;
+        _imagePath = imagePath;
         _finished = NO;
         _executing = NO;
         _callbackBlocks = [NSMutableArray new];
@@ -110,7 +110,7 @@ static NSString *const kCompletedCallbackKey = @"kCompletedCallbackKey";
         self.executing = YES;
         
         dispatch_async(self.loaderQueue, ^{
-            NSData *imageData = [NSData dataWithContentsOfURL:self.imageUrl];
+            NSData *imageData = [NSData dataWithContentsOfFile:self.imagePath];
             if (imageData) {
                 UIImage *image = [UIImage imageWithData:imageData];
                 [self callCompletedBlockWithImage:image error:nil andFinished:YES];

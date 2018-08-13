@@ -27,7 +27,7 @@ typedef NS_ENUM(NSUInteger, XBLocalImageLoaderExecutionOrder) {
 
 @interface XBLocalImageLoaderToken : NSObject
 
-@property (nonatomic, strong) NSURL *url;
+@property (nonatomic,   copy) NSString *path;
 @property (nonatomic, strong) id callback;
 
 @end
@@ -43,9 +43,9 @@ typedef NS_ENUM(NSUInteger, XBLocalImageLoaderExecutionOrder) {
 
 + (instancetype)sharedLoader;
 
-- (XBLocalImageLoaderToken *)loadImageWithUrl:(NSURL *)url
-                                      options:(XBLocalImageLoaderOptions)options
-                                    completed:(XBLocalImageLoadCompletedBlock)completedBlock;
+- (XBLocalImageLoaderToken *)loadImageWithPath:(NSString *)imagePath
+                                       options:(XBLocalImageLoaderOptions)options
+                                     completed:(XBLocalImageLoadCompletedBlock)completedBlock;
 
 - (void)cancel:(XBLocalImageLoaderToken *)token;
 - (void)cancelAllOperations;

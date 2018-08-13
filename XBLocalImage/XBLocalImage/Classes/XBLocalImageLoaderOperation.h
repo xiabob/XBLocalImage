@@ -11,7 +11,7 @@
 
 @interface XBLocalImageLoaderOperation : NSOperation
 
-- (instancetype)initWithImagePath:(NSURL *)imageUrl;
+- (instancetype)initWithImagePath:(NSString *)imagePath;
 
 - (BOOL)cancel:(id)callback;
 - (NSMutableDictionary *)addCompletedBlock:(XBLocalImageLoadCompletedBlock)completeBlock;
