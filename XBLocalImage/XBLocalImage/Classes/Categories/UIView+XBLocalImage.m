@@ -53,6 +53,8 @@
         return setImageBlock(image);
     }
     
+    if (!image) return;
+    
     if ([self isKindOfClass:[UIImageView class]]) {
         ((UIImageView *)self).image = image;
     } else if ([self isKindOfClass:[UIButton class]]) {

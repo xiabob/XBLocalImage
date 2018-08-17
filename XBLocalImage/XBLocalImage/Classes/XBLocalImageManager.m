@@ -100,6 +100,14 @@
         imagePath = [[NSBundle mainBundle] pathForResource:imagePath ofType:nil];
     }
     
+    if (imagePath.length == 0) {
+        [self callCompletionBlockForOperation:operation
+                                   completion:completedBlock
+                                        error:[NSError errorWithDomain:NSURLErrorDomain code:0 userInfo:@{NSURLLocalizedNameKey: @"image name or path can't be empty"}]
+                                   nameOrPath:imageNameOrPath];
+        return operation;
+    }
+    
     UIImage *image = [self.imageCache memoryCacheForKey:imagePath];
     if (image) {
         [self callCompletionBlockForOperation:operation completion:completedBlock image:image error:nil finished:YES nameOrPath:imageNameOrPath];

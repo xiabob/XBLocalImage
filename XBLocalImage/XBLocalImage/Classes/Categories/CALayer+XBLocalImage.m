@@ -77,6 +77,7 @@
 }
 
 - (void)xb_setImage:(UIImage *)image {
+    if (!image) return;
     self.contents = (__bridge id _Nullable)([image CGImage]);
     //[self setNeedsDisplay]; 导致contents被重新设置了
 }
